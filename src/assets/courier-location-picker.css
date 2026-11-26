@@ -1,0 +1,7 @@
+.courier-location-marker { display: grid !important; place-items: center; width: 42px !important; height: 42px !important; border: 3px solid #fff !important; border-radius: 50% !important; color: #fff; background: #9a0c53; box-shadow: 0 2px 9px rgba(0,0,0,.28); }
+.courier-location-marker svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.location-picker__back { display: inline-flex !important; align-items: center; gap: 4px; color: #171126; font: inherit; font-size: 12px; font-weight: 800; }
+.location-picker__cancel { width: 100%; margin-top: 8px; border: 0; color: #746d7d; background: transparent; font: inherit; font-size: 12px; font-weight: 800; }
+.location-picker__layers { position: fixed !important; z-index: 1205 !important; top: 76px; right: 24px; display: flex !important; visibility: visible !important; opacity: 1 !important; gap: 4px; padding: 4px; border: 1px solid rgba(22,11,40,.12); border-radius: 12px; background: rgba(255,255,255,.97); box-shadow: 0 3px 12px rgba(22,11,40,.16); }
+.location-picker__layers button { padding: 7px 9px; border: 0; border-radius: 8px; color: #5f5868; background: transparent; font: inherit; font-size: 11px; font-weight: 800; }
+.location-picker__layers button.active { color: #fff; background: #9a0c53; }

@@ -1,0 +1,2 @@
+.tracking-cancel-button{right:24px;bottom:18px;left:24px;min-height:40px;border:1px solid #ffd2df;border-radius:20px;color:#a11d45;background:#fff7f9;box-shadow:none;font-size:14px}
+.cancel-modal__actions{display:flex!important;flex-direction:column;gap:10px}.cancel-modal__actions button{width:100%;min-height:46px;font-size:14px}.cancel-modal__primary{order:-1}

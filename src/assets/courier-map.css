@@ -1,0 +1,1 @@
+.courier-map-marker{display:grid;place-items:center;border:3px solid #fff;border-radius:50%;color:#fff;font:900 13px Nunito Sans,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)}.courier-map-marker--pickup{background:#f20552}.courier-map-marker--delivery{background:#1b1231}.courier-map-info{margin:0;padding:8px 10px;color:#5f5868;background:#fff;font-size:12px;text-align:center}

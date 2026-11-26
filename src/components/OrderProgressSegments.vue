@@ -1,0 +1,6 @@
+<script setup>
+defineProps({ state: { type: String, required: true }, expanded: { type: Boolean, default: false } })
+const phases = [{ key: 'RECIBIDO', label: 'Pedido recibido' }, { key: 'PENDIENTE', label: 'Esperando confirmación' }, { key: 'PREPARANDO', label: 'Preparando tu pedido' }, { key: 'ASIGNADO', label: 'Repartidor asignado' }, { key: 'EN_CAMINO', label: 'En camino' }, { key: 'ENTREGADO', label: 'Entregado' }]
+const order = { PENDIENTE_ACEPTACION: 1, PREPARANDO: 2, LISTO_PARA_RECOGER: 2, PENDIENTE: 1, ASIGNADO: 3, RECOGIDO: 3, EN_CAMINO: 4, ENTREGADO: 5, CANCELADO: -1 }
+</script>
+<template><div class="tracking-phases"><div class="tracking-segments"><span v-for="(phase, index) in phases" :key="phase.key" :class="{ done: state !== 'CANCELADO' && (state === 'PENDIENTE' ? index <= 1 : index <= order[state]), current: (state === 'PENDIENTE' && index === 1) || (state !== 'PENDIENTE' && index === order[state]) }"><i /></span></div><div v-if="expanded" class="tracking-phase-list"><div v-for="(phase, index) in phases" :key="phase.key" :class="{ done: state !== 'CANCELADO' && index <= order[state], current: index === order[state] }"><i /> <span>{{ phase.label }}</span></div></div></div></template>
