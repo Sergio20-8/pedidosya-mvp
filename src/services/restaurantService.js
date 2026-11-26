@@ -20,30 +20,31 @@ function fallbackProductImage(product) {
   return images.productoDefault
 }
 
-export async function listRestaurants() {
-  const { data: restaurants, error } = await supabase
+export async function listRestaurants(tipoEstablecimiento = 'RESTAURANTE') {
+  let query = supabase
     .from('restaurantes')
-    .select('id, nombre, tipo_comida, descripcion, imagen_url, banner_url, tiempo_preparacion_min, calificacion, cantidad_resenas, zona_id, pos_x, pos_y, zonas(nombre)')
+    .select('id, nombre, tipo_establecimiento, tipo_comida, descripcion, imagen_url, banner_url, tiempo_preparacion_min, calificacion, cantidad_resenas, zona_id, pos_x, pos_y, zonas(nombre)')
     .eq('activo', true)
-    .order('nombre')
+  if (tipoEstablecimiento && tipoEstablecimiento !== 'TODOS') query = query.eq('tipo_establecimiento', tipoEstablecimiento)
+  const { data: restaurants, error } = await query.order('nombre')
   if (error) throw error
 
   const ids = (restaurants || []).map((restaurant) => restaurant.id)
   const { data: products, error: productsError } = ids.length
-    ? await supabase.from('productos').select('id, restaurante_id, categoria_id, disponible, categorias(nombre)').in('restaurante_id', ids)
+    ? await supabase.from('productos').select('id, restaurante_id, categoria_id, nombre, disponible, categorias(nombre)').in('restaurante_id', ids)
     : { data: [], error: null }
   if (productsError) throw productsError
 
   return (restaurants || []).map((restaurant) => {
     const restaurantProducts = (products || []).filter((product) => product.restaurante_id === restaurant.id && product.disponible)
     const categories = [...new Set(restaurantProducts.map((product) => product.categorias?.nombre).filter(Boolean))]
-    return { ...restaurant, image: restaurant.imagen_url || fallbackRestaurantImage(restaurant), categories, productCount: restaurantProducts.length }
+    return { ...restaurant, image: restaurant.imagen_url || fallbackRestaurantImage(restaurant), categories, productNames: restaurantProducts.map((product) => product.nombre).filter(Boolean), productCount: restaurantProducts.length }
   })
 }
 
 export async function getRestaurantDetail(id) {
   const [{ data: restaurant, error }, { data: products, error: productsError }] = await Promise.all([
-    supabase.from('restaurantes').select('id, nombre, tipo_comida, descripcion, imagen_url, banner_url, tiempo_preparacion_min, calificacion, cantidad_resenas, zona_id, pos_x, pos_y, zonas(nombre)').eq('id', id).eq('activo', true).maybeSingle(),
+    supabase.from('restaurantes').select('id, nombre, tipo_establecimiento, tipo_comida, descripcion, imagen_url, banner_url, tiempo_preparacion_min, calificacion, cantidad_resenas, zona_id, pos_x, pos_y, zonas(nombre)').eq('id', id).eq('activo', true).maybeSingle(),
     supabase.from('productos').select('id, restaurante_id, categoria_id, nombre, descripcion, precio, imagen_url, disponible, categorias(id, nombre, orden)').eq('restaurante_id', id).eq('disponible', true).order('nombre')
   ])
   if (error) throw error

@@ -1,11 +1,14 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue'
 import { Bell, ChevronDown, CirclePercent, Home, ReceiptText, Search, ShoppingCart, Store, UserRound } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
 import { images } from '../constants/images'
 import { useCartStore } from '../stores/cart'
 
 const promoScroller = ref(null)
 const cart = useCartStore()
+const router = useRouter()
+const searchQuery = ref('')
 let promoTimer
 
 function advancePromos() {
@@ -26,11 +29,16 @@ function advancePromos() {
 onMounted(() => { promoTimer = window.setInterval(advancePromos, 5000) })
 onUnmounted(() => { window.clearInterval(promoTimer) })
 
+function submitSearch() {
+  const search = searchQuery.value.trim()
+  if (search) router.push({ name: 'search', query: { buscar: search } })
+}
+
 const categories = [
-  { name: 'Mercados', image: images.mercados },
-  { name: 'Bebidas', image: images.bebidas },
-  { name: 'Farmacias', image: images.farmacias },
-  { name: 'Café', image: images.cafe }
+  { name: 'Mercados', image: images.mercados, path: '/supermercados' },
+  { name: 'Bebidas', image: images.bebidas, path: '/buscar?categoria=Bebidas' },
+  { name: 'Farmacias', image: images.farmacias, path: '/farmacias' },
+  { name: 'Café', image: images.cafe, path: '/buscar?categoria=Café' }
 ]
 </script>
 
@@ -41,7 +49,7 @@ const categories = [
         <button class="location-button" aria-label="Cambiar dirección"><span>Unnamed Road</span><ChevronDown :size="19" stroke-width="2.2" /></button>
         <div class="header-actions"><button aria-label="Notificaciones"><Bell :size="23" /></button><RouterLink class="cart-link" to="/carrito" aria-label="Carrito"><ShoppingCart :size="24" /><b v-if="cart.count" class="cart-badge">{{ cart.count }}</b></RouterLink></div>
       </div>
-      <div class="search-bar"><span>Locales, platos y productos</span><button aria-label="Buscar"><Search :size="20" stroke-width="2.4" /></button></div>
+      <form class="search-bar" @submit.prevent="submitSearch"><input v-model="searchQuery" placeholder="Locales, platos y productos" aria-label="Buscar locales, platos y productos" /><button type="submit" aria-label="Buscar"><Search :size="20" stroke-width="2.4" /></button></form>
     </section>
 
     <div class="home-content">
@@ -53,11 +61,11 @@ const categories = [
 
       <section class="feature-grid" aria-label="Explorar servicios">
         <RouterLink class="feature-card" to="/restaurantes"><img :src="images.restaurantes" alt="Hamburguesa" /><h2>Restaurantes</h2></RouterLink>
-        <article class="feature-card"><img :src="images.market" alt="Productos de supermercado" /><h2>PedidosYa Market</h2></article>
+        <RouterLink class="feature-card" to="/supermercados"><img :src="images.market" alt="Productos de supermercado" /><h2>PedidosYa Market</h2></RouterLink>
       </section>
 
       <section class="category-scroller" aria-label="Categorías">
-        <article v-for="category in categories" :key="category.name" class="category-card"><img :src="category.image" :alt="category.name" /><h2>{{ category.name }}</h2></article>
+        <RouterLink v-for="category in categories" :key="category.name" class="category-card" :to="category.path"><img :src="category.image" :alt="category.name" /><h2>{{ category.name }}</h2></RouterLink>
       </section>
 
       <section ref="promoScroller" class="promo-scroller" aria-label="Más opciones deliciosas">
@@ -76,7 +84,7 @@ const categories = [
     </div>
 
     <nav class="bottom-nav" aria-label="Navegación principal">
-      <RouterLink class="bottom-nav__item is-active" to="/"><Home :size="23" fill="currentColor" /><span>Inicio</span></RouterLink><RouterLink class="bottom-nav__item" to="/restaurantes"><Store :size="23" /><span>Mercados</span></RouterLink><a class="bottom-nav__item" href="#"><CirclePercent :size="23" /><span>Promociones</span></a><RouterLink class="bottom-nav__item" to="/cliente"><ReceiptText :size="23" /><span>Pedidos</span></RouterLink><RouterLink class="bottom-nav__item" to="/perfil"><UserRound :size="23" /><span>Mi perfil</span></RouterLink>
+      <RouterLink class="bottom-nav__item is-active" to="/"><Home :size="23" fill="currentColor" /><span>Inicio</span></RouterLink><RouterLink class="bottom-nav__item" to="/supermercados"><Store :size="23" /><span>Mercados</span></RouterLink><a class="bottom-nav__item" href="#"><CirclePercent :size="23" /><span>Promociones</span></a><RouterLink class="bottom-nav__item" to="/cliente"><ReceiptText :size="23" /><span>Pedidos</span></RouterLink><RouterLink class="bottom-nav__item" to="/perfil"><UserRound :size="23" /><span>Mi perfil</span></RouterLink>
     </nav>
   </main>
 </template>

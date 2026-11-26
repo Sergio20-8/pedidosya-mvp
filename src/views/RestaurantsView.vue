@@ -1,22 +1,27 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { ArrowLeft, ChevronDown, Heart, List, Search, ShoppingCart, SlidersHorizontal, Star, X } from 'lucide-vue-next'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { listRestaurants } from '../services/restaurantService'
 import { useCartStore } from '../stores/cart'
 
 const router = useRouter()
+const route = useRoute()
 const cart = useCartStore()
 const restaurants = ref([])
 const loading = ref(true)
 const error = ref('')
-const query = ref('')
+const query = ref(String(route.query.buscar || ''))
 const sort = ref('name')
 const minRating = ref(0)
+const establishmentType = computed(() => String(route.query.tipo || (route.path === '/buscar' ? 'TODOS' : route.path === '/supermercados' ? 'SUPERMERCADO' : route.path === '/farmacias' ? 'FARMACIA' : 'RESTAURANTE')).toUpperCase())
+const sectionLabel = computed(() => establishmentType.value === 'SUPERMERCADO' ? 'supermercado' : establishmentType.value === 'FARMACIA' ? 'farmacia' : establishmentType.value === 'TODOS' ? 'resultado' : 'restaurante')
+function normalizeSearch(value) { return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim() }
+function editDistance(a, b) { const row = Array.from({ length: b.length + 1 }, (_, index) => index); for (let i = 1; i <= a.length; i += 1) { let previous = row[0]; row[0] = i; for (let j = 1; j <= b.length; j += 1) { const current = row[j]; row[j] = Math.min(row[j] + 1, row[j - 1] + 1, previous + (a[i - 1] === b[j - 1] ? 0 : 1)); previous = current } } return row[b.length] }
+function matchesSearch(value, queryValue) { const text = normalizeSearch(value); const term = normalizeSearch(queryValue); if (!term || text.includes(term)) return true; return term.split(/\s+/).every((part) => text.split(/\s+/).some((word) => editDistance(part, word) <= (part.length <= 4 ? 1 : Math.max(1, Math.floor(part.length * 0.3))))) }
 
 const filteredRestaurants = computed(() => {
-  const normalized = query.value.trim().toLowerCase()
-  const result = restaurants.value.filter((restaurant) => restaurant.nombre.toLowerCase().includes(normalized) && Number(restaurant.calificacion || 0) >= minRating.value)
+  const result = restaurants.value.filter((restaurant) => (matchesSearch(restaurant.nombre, query.value) || restaurant.productNames?.some((name) => matchesSearch(name, query.value))) && Number(restaurant.calificacion || 0) >= minRating.value)
   return [...result].sort((a, b) => sort.value === 'products' ? b.productCount - a.productCount : a.nombre.localeCompare(b.nombre))
 })
 
@@ -26,11 +31,12 @@ function toggleRating() { minRating.value = minRating.value ? 0 : 4.5 }
 async function load() {
   loading.value = true
   error.value = ''
-  try { restaurants.value = await listRestaurants() } catch (loadError) { error.value = loadError.message || 'No se pudieron cargar los restaurantes.' }
+  try { restaurants.value = await listRestaurants(establishmentType.value) } catch (loadError) { error.value = loadError.message || `No se pudieron cargar los ${sectionLabel.value}s.` }
   finally { loading.value = false }
 }
 
 onMounted(load)
+watch(() => route.query.buscar, (value) => { query.value = String(value || '') })
 </script>
 
 <template>
@@ -50,7 +56,7 @@ onMounted(load)
     </header>
 
     <section class="catalog-content">
-      <div class="catalog-heading"><h1>{{ filteredRestaurants.length }} {{ filteredRestaurants.length === 1 ? 'restaurante' : 'restaurantes' }}</h1><div class="view-toggle"><List :size="19" /><span></span></div></div>
+      <div class="catalog-heading"><h1>{{ filteredRestaurants.length }} {{ filteredRestaurants.length === 1 ? sectionLabel : `${sectionLabel}s` }}</h1><div class="view-toggle"><List :size="19" /><span></span></div></div>
       <div v-if="loading" class="restaurant-list restaurant-list--skeleton" aria-label="Cargando restaurantes" aria-busy="true">
         <article v-for="item in 3" :key="item" class="restaurant-card restaurant-card--skeleton">
           <div class="restaurant-card__image skeleton-block"></div>
@@ -58,9 +64,9 @@ onMounted(load)
         </article>
       </div>
       <p v-else-if="error" class="catalog-state catalog-state--error">{{ error }}</p>
-      <p v-else-if="!filteredRestaurants.length" class="catalog-state">No encontramos restaurantes con ese nombre.</p>
+      <p v-else-if="!filteredRestaurants.length" class="catalog-state">No encontramos {{ sectionLabel }}s con ese nombre.</p>
       <div v-else class="restaurant-list">
-        <article v-for="restaurant in filteredRestaurants" :key="restaurant.id" class="restaurant-card" @click="router.push({ name: 'restaurant-detail', params: { id: restaurant.id } })">
+        <article v-for="restaurant in filteredRestaurants" :key="restaurant.id" class="restaurant-card" @click="router.push({ name: 'restaurant-detail', params: { id: restaurant.id }, query: { tipo: establishmentType } })">
           <img class="restaurant-card__image" :src="restaurant.banner_url || restaurant.image" :alt="restaurant.nombre" />
           <div class="restaurant-card__body"><div class="restaurant-card__logo"><img :src="restaurant.image" :alt="`Logotipo de ${restaurant.nombre}`" /></div><div class="restaurant-card__info"><h2>{{ restaurant.nombre }}</h2><p v-if="restaurant.tipo_comida || restaurant.categories.length" class="restaurant-cuisine">{{ restaurant.tipo_comida || restaurant.categories.join(' · ') }}</p><p v-if="restaurant.tiempo_preparacion_min" class="restaurant-meta">{{ restaurant.tiempo_preparacion_min }} min</p></div><div class="restaurant-card__actions"><span class="restaurant-rating"><Star :size="15" fill="currentColor" /> {{ Number(restaurant.calificacion || 0).toFixed(1) }} ({{ restaurant.cantidad_resenas || 0 }})</span><Heart :size="18" /></div></div>
         </article>

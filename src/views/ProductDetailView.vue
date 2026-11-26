@@ -17,6 +17,7 @@ const quantity = ref(1)
 const notice = ref('')
 
 const total = computed(() => Number(product.value?.precio || 0) * quantity.value)
+const isRestaurant = computed(() => restaurant.value?.tipo_establecimiento === 'RESTAURANTE')
 
 async function load() {
   try {
@@ -59,10 +60,8 @@ onMounted(load)
         <h1>{{ product.nombre }}</h1>
         <p class="product-detail-description">{{ product.descripcion || 'Una opción deliciosa para disfrutar.' }}</p>
         <strong class="product-detail-price">${{ Number(product.precio).toFixed(2) }}</strong>
-        <div class="product-detail-offer"><strong>Paga ${{ Number(product.precio).toFixed(2) }}</strong><span>con <b>plus</b></span><small>Suscribirme</small></div>
-        <div class="product-option"><div><h2>Elige una opción</h2><p>Selecciona los complementos disponibles</p></div><span>Opcional</span></div>
-        <div class="product-option-row"><span>Sin complemento</span><span>$0.00 <i></i></span></div>
-        <h2 class="product-opinions">Opiniones del plato <small>Mostrar todas</small></h2>
+        <div class="product-detail-store"><img :src="restaurant?.image || restaurant?.imagen_url || images.productoDefault" :alt="`Logotipo de ${restaurant?.nombre}`" /><span>Vendido por <b>{{ restaurant?.nombre }}</b></span></div>
+        <template v-if="isRestaurant"><div class="product-detail-offer"><strong>Paga ${{ Number(product.precio).toFixed(2) }}</strong><span>con <b>plus</b></span><small>Suscribirme</small></div><div class="product-option"><div><h2>Elige una opción</h2><p>Selecciona los complementos disponibles</p></div><span>Opcional</span></div><div class="product-option-row"><span>Sin complemento</span><span>$0.00 <i></i></span></div><h2 class="product-opinions">Opiniones del plato <small>Mostrar todas</small></h2></template>
       </section>
       <footer class="product-detail-footer"><div><span>Tu producto</span><strong>${{ total.toFixed(2) }}</strong></div><div class="product-detail-actions"><div class="quantity-control"><button aria-label="Reducir cantidad" @click="changeQuantity(-1)"><Minus :size="16" /></button><span>{{ quantity }}</span><button aria-label="Aumentar cantidad" @click="changeQuantity(1)"><Plus :size="16" /></button></div><button class="product-add-button" @click="addProduct">Agregar</button></div></footer>
     </template>

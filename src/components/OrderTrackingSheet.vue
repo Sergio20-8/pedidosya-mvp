@@ -19,6 +19,7 @@ const preparationRemaining = computed(() => { if (props.order.estado !== 'PREPAR
 const messages = new Proxy({ ASIGNADO: '', RECOGIDO: 'Tu pedido fue recogido por el repartidor.', EN_CAMINO: 'va hacia tu dirección.', ENTREGADO: 'Tu pedido fue entregado.' }, { get(target, key) { if (key === 'PREPARANDO') { if (preparationRemaining.value == null) return 'Tiempo de preparación pendiente'; return preparationRemaining.value > 0 ? `${preparationRemaining.value} min restantes` : 'Tu pedido está tardando un poco más de lo previsto.' } return target[key] } })
 onMounted(() => { timer = window.setInterval(() => { now.value = Date.now() }, 1000) }); onBeforeUnmount(() => window.clearInterval(timer))
 const icon = computed(() => props.order.estado === 'CANCELADO' ? XCircle : props.order.estado === 'EN_CAMINO' ? Truck : props.order.estado === 'ENTREGADO' ? CheckCircle2 : MapPin)
+const establishmentLabel = computed(() => props.order.restaurantes?.tipo_establecimiento === 'SUPERMERCADO' ? 'El supermercado' : props.order.restaurantes?.tipo_establecimiento === 'FARMACIA' ? 'La farmacia' : 'El restaurante')
 const courierName = computed(() => {
   const assignment = props.order.asignaciones?.find((item) => !item.terminada_en)
   const courier = Array.isArray(assignment?.repartidores) ? assignment.repartidores[0] : assignment?.repartidores
